@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/-SOLID-COLOR-EXTRACT-DESIGNER/sw.js', { scope: '/-SOLID-COLOR-EXTRACT-DESIGNER/' })})}
