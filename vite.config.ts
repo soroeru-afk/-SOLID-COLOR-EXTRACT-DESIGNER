@@ -18,7 +18,8 @@ export default defineConfig(({mode}) => {
           name: 'Solid Color Extract Designer',
           short_name: 'ColorExtractor',
           description: 'Extract solid colors from images.',
-          theme_color: '#ffffff',
+          theme_color: '#020617',
+          background_color: '#020617',
           icons: [
             {
               src: 'icon.svg',
