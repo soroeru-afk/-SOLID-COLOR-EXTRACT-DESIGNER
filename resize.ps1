@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Drawing
 
-$srcPath = "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\icon-custom.png"
+$srcPath = "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\icon-processed.png"
 $img = [System.Drawing.Image]::FromFile($srcPath)
 
 function Resize-Image($image, $width, $height, $path) {
