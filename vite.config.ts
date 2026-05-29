@@ -13,7 +13,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon-ｄ.jpg'],
+        includeAssets: ['icon-custom.png'],
         manifest: {
           name: 'Solid Color Extract Designer',
           short_name: 'ColorExtractor',
@@ -22,14 +22,14 @@ export default defineConfig(({mode}) => {
           background_color: '#0E1014',
           icons: [
             {
-              src: 'icon-ｄ.jpg',
+              src: 'icon-custom.png',
               sizes: '192x192',
-              type: 'image/jpeg'
+              type: 'image/png'
             },
             {
-              src: 'icon-ｄ.jpg',
+              src: 'icon-custom.png',
               sizes: '512x512',
-              type: 'image/jpeg'
+              type: 'image/png'
             }
           ]
         }
