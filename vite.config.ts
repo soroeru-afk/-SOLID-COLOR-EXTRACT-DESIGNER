@@ -15,8 +15,8 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         includeAssets: ['pwa-192x192.png', 'pwa-512x512.png'],
         manifest: {
-          name: 'Solid Color Extract Designer',
-          short_name: 'ColorExtractor',
+          name: 'SOLID COLOR EXTRACT DESIGNER',
+          short_name: 'COLOR EXTRACTOR',
           description: 'Extract solid colors from images.',
           theme_color: '#0E1014',
           background_color: '#0E1014',
