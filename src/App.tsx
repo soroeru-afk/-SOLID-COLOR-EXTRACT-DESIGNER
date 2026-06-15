@@ -420,6 +420,72 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  // Window geometry persistence (size & position)
+  useEffect(() => {
+    const saveWindowMetrics = () => {
+      try {
+        const width = window.outerWidth || window.innerWidth;
+        const height = window.outerHeight || window.innerHeight;
+        const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
+        const y = window.screenY !== undefined ? window.screenY : window.screenTop;
+        
+        if (width > 100 && height > 100) {
+          localStorage.setItem("solid_color_window_width", String(width));
+          localStorage.setItem("solid_color_window_height", String(height));
+        }
+        localStorage.setItem("solid_color_window_x", String(x));
+        localStorage.setItem("solid_color_window_y", String(y));
+      } catch (e) {
+        console.error("Failed to save window metrics", e);
+      }
+    };
+
+    // Load and apply saved geometry
+    try {
+      const savedW = localStorage.getItem("solid_color_window_width");
+      const savedH = localStorage.getItem("solid_color_window_height");
+      const savedX = localStorage.getItem("solid_color_window_x");
+      const savedY = localStorage.getItem("solid_color_window_y");
+
+      if (savedW && savedH) {
+        const w = parseInt(savedW, 10);
+        const h = parseInt(savedH, 10);
+        window.resizeTo(w, h);
+        if (savedX !== null && savedY !== null) {
+          window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
+        }
+      } else {
+        // Default size: wider and taller to prevent panels from being cut off
+        const w = 1280;
+        const h = 880;
+        const left = Math.max(0, (window.screen.availWidth - w) / 2);
+        const top = Math.max(0, (window.screen.availHeight - h) / 2);
+        window.resizeTo(w, h);
+        window.moveTo(left, top);
+      }
+    } catch (e) {
+      console.error("Failed to load window metrics", e);
+    }
+
+    // Debounced listener to save metrics on resize
+    let debounceTimer: any;
+    const handleResize = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(saveWindowMetrics, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+    
+    // Periodically save position since there is no standard move event
+    const positionInterval = setInterval(saveWindowMetrics, 1000);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearInterval(positionInterval);
+      clearTimeout(debounceTimer);
+    };
+  }, []);
+
   const handleParsedColor = (parsed: {
     r: number;
     g: number;
