@@ -322,6 +322,8 @@ export default function App() {
 
   // Stock colors state
   const [stockColors, setStockColors] = useState<string[]>(Array(10).fill(""));
+  const [isEyeDropperActive, setIsEyeDropperActive] = useState(false);
+  const [pickedFlashColor, setPickedFlashColor] = useState<string | null>(null);
 
   const handleStockColor = () => {
     if (!stockColors.includes(hex)) {
@@ -437,14 +439,21 @@ export default function App() {
       alert("Your browser does not support the EyeDropper API. Please try a Chromium-based browser (Chrome, Edge).");
       return;
     }
+    setIsEyeDropperActive(true);
     try {
       // @ts-ignore
       const eyeDropper = new window.EyeDropper();
       const result = await eyeDropper.open();
       const parsed = parseColorString(result.sRGBHex);
-      if (parsed) handleParsedColor(parsed);
+      if (parsed) {
+        handleParsedColor(parsed);
+        setPickedFlashColor(result.sRGBHex);
+        setTimeout(() => setPickedFlashColor(null), 300);
+      }
     } catch (e) {
       console.log("EyeDropper canceled or failed");
+    } finally {
+      setIsEyeDropperActive(false);
     }
   };
 
@@ -484,6 +493,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-app-bg text-app-text-primary font-sans p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden selection:bg-app-border-focus transition-colors duration-300">
+      <style>{`
+        @keyframes pulse-accent {
+          0%, 100% {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 2px var(--theme-accent);
+          }
+          50% {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 10px var(--theme-accent);
+          }
+        }
+        .animate-pulse-accent {
+          animation: pulse-accent 1.5s infinite ease-in-out;
+        }
+      `}</style>
       <div className="max-w-[1200px] mx-auto w-full flex flex-col gap-3">
         {/* Header - Software like */}
         <header className="flex flex-wrap gap-3 items-end justify-between border-b border-app-border pb-2 px-1 text-sm">
@@ -521,7 +545,7 @@ export default function App() {
               ENV: PRODUCTION
             </div>
             <div className="bg-app-panel border border-app-border px-3 py-1.5 text-app-text-primary font-mono text-[10px] tracking-widest shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] border-l-[1.5px] border-l-app-accent">
-              SYS. V4
+              SYS. V5
             </div>
           </div>
         </header>
@@ -544,6 +568,32 @@ export default function App() {
                     if (alpha < 1) setAlpha(1);
                   }}
                 />
+              </div>
+
+              {/* PICK SCREEN FEATURE */}
+              <div className="mb-5 mt-2 px-1">
+                <button
+                  onClick={handleEyeDropper}
+                  className={`group w-full flex flex-col items-center justify-center py-4 border border-dashed transition-all duration-700 ${
+                    isEyeDropperActive 
+                      ? "bg-app-input border-app-accent animate-pulse-accent" 
+                      : "bg-app-bg/30 border-app-text-muted/70 hover:border-app-accent/80 hover:bg-app-panel"
+                  }`}
+                  style={pickedFlashColor ? { backgroundColor: pickedFlashColor, borderColor: pickedFlashColor, transitionDuration: '50ms' } : {}}
+                  title="Pick color from screen"
+                >
+                  <div className={`flex items-center gap-2 font-bold font-mono text-[12px] uppercase tracking-widest transition-colors ${
+                    isEyeDropperActive ? "text-app-accent" : "text-app-text-primary group-hover:text-app-accent"
+                  }`}>
+                    <Pipette size={14} />
+                    <span>{isEyeDropperActive ? "SEARCHING..." : "PICK SCREEN"}</span>
+                  </div>
+                  <div className={`text-[9px] font-mono tracking-[0.2em] uppercase mt-1 transition-colors ${
+                    isEyeDropperActive ? "text-app-accent/70" : "text-app-text-muted/70"
+                  }`}>
+                    {isEyeDropperActive ? "SELECT COLOR ON SCREEN" : "NATIVE API / EYE DROPPER"}
+                  </div>
+                </button>
               </div>
 
               {/* HSV Inputs */}
@@ -1058,14 +1108,6 @@ export default function App() {
                 <div className="bg-app-bg/50 border border-app-border mb-3 p-2 group focus-within:border-app-accent transition-colors">
                   <div className="text-[9px] font-mono text-app-accent mb-1 flex justify-between items-center">
                     <span>FAST COLOR INGEST (PASTE HERE)</span>
-                    <button
-                      onClick={handleEyeDropper}
-                      className="flex items-center gap-1.5 px-2 py-0.5 border border-app-accent/30 rounded hover:bg-app-accent hover:text-app-bg transition-colors"
-                      title="Pick color from screen"
-                    >
-                      <Pipette size={10} />
-                      <span>PICK SCREEN</span>
-                    </button>
                   </div>
                   <textarea
                     className="w-full bg-transparent border-none outline-none font-mono text-[11px] text-app-text-primary resize-none placeholder-app-text-muted/50 h-12"
