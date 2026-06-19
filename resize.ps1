@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Drawing
 
-$srcPath = "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\icon-processed.png"
+$srcPath = Join-Path $PSScriptRoot "public\icon-processed.png"
 $img = [System.Drawing.Image]::FromFile($srcPath)
 
 function Resize-Image($image, $width, $height, $path) {
@@ -13,7 +13,7 @@ function Resize-Image($image, $width, $height, $path) {
     $bmp.Dispose()
 }
 
-Resize-Image $img 192 192 "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\pwa-192x192.png"
-Resize-Image $img 512 512 "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\pwa-512x512.png"
+Resize-Image $img 192 192 (Join-Path $PSScriptRoot "public\pwa-192x192.png")
+Resize-Image $img 512 512 (Join-Path $PSScriptRoot "public\pwa-512x512.png")
 
 $img.Dispose()

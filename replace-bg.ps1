@@ -1,6 +1,6 @@
 Add-Type -AssemblyName System.Drawing
 
-$srcPath = "c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\icon-custom.png"
+$srcPath = Join-Path $PSScriptRoot "public\icon-custom.png"
 $img = [System.Drawing.Image]::FromFile($srcPath)
 $bmp = New-Object System.Drawing.Bitmap($img)
 
@@ -32,6 +32,7 @@ for ($x = 0; $x -lt $w; $x++) {
     }
 }
 
-$bmp.Save("c:\Users\soroe\A-App\-SOLID-COLOR-EXTRACT-DESIGNER\public\icon-processed.png", [System.Drawing.Imaging.ImageFormat]::Png)
+$destPath = Join-Path $PSScriptRoot "public\icon-processed.png"
+$bmp.Save($destPath, [System.Drawing.Imaging.ImageFormat]::Png)
 $bmp.Dispose()
 $img.Dispose()
