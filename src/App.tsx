@@ -13,6 +13,8 @@ import {
   Bookmark,
   BookmarkPlus,
   Pipette,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import {
   hsvToRgb,
@@ -324,6 +326,75 @@ export default function App() {
   const [stockColors, setStockColors] = useState<string[]>(Array(10).fill(""));
   const [isEyeDropperActive, setIsEyeDropperActive] = useState(false);
   const [pickedFlashColor, setPickedFlashColor] = useState<string | null>(null);
+  
+  // Compact Mode State
+  const [isCompactMode, setIsCompactMode] = useState(false);
+  const [compactCopied, setCompactCopied] = useState(false);
+
+  // Save window metrics (only when not in compact mode)
+  const saveWindowMetrics = () => {
+    if (isCompactMode) return;
+    try {
+      const width = window.outerWidth || window.innerWidth || document.documentElement.clientWidth;
+      const height = window.outerHeight || window.innerHeight || document.documentElement.clientHeight;
+      const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
+      const y = window.screenY !== undefined ? window.screenY : window.screenTop;
+
+      if (width > 350 && height > 350) {
+        localStorage.setItem("solid_color_window_width_full", String(width));
+        localStorage.setItem("solid_color_window_height_full", String(height));
+      }
+      localStorage.setItem("solid_color_window_x", String(x));
+      localStorage.setItem("solid_color_window_y", String(y));
+    } catch (e) {
+      console.error("Failed to save window metrics", e);
+    }
+  };
+
+  // Handle window resizing based on isCompactMode
+  useEffect(() => {
+    if (isCompactMode) {
+      try {
+        window.resizeTo(320, 310);
+      } catch (e) {
+        console.error("Failed to resize to compact size", e);
+      }
+    } else {
+      try {
+        const savedW = localStorage.getItem("solid_color_window_width_full");
+        const savedH = localStorage.getItem("solid_color_window_height_full");
+        const savedX = localStorage.getItem("solid_color_window_x");
+        const savedY = localStorage.getItem("solid_color_window_y");
+
+        const w = savedW ? parseInt(savedW, 10) : 1280;
+        const h = savedH ? parseInt(savedH, 10) : 880;
+        window.resizeTo(w, h);
+        if (savedX !== null && savedY !== null) {
+          window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
+        }
+      } catch (e) {
+        console.error("Failed to restore window metrics", e);
+      }
+    }
+  }, [isCompactMode]);
+
+  // Set up window resize listener to track full screen bounds
+  useEffect(() => {
+    let debounceTimer: any;
+    const handleResize = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(saveWindowMetrics, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+    const positionInterval = setInterval(saveWindowMetrics, 1000);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearInterval(positionInterval);
+      clearTimeout(debounceTimer);
+    };
+  }, [isCompactMode]);
 
   const handleStockColor = () => {
     if (!stockColors.includes(hex)) {
@@ -420,72 +491,6 @@ export default function App() {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Window geometry persistence (size & position)
-  useEffect(() => {
-    const saveWindowMetrics = () => {
-      try {
-        const width = window.outerWidth || window.innerWidth;
-        const height = window.outerHeight || window.innerHeight;
-        const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
-        const y = window.screenY !== undefined ? window.screenY : window.screenTop;
-        
-        if (width > 100 && height > 100) {
-          localStorage.setItem("solid_color_window_width", String(width));
-          localStorage.setItem("solid_color_window_height", String(height));
-        }
-        localStorage.setItem("solid_color_window_x", String(x));
-        localStorage.setItem("solid_color_window_y", String(y));
-      } catch (e) {
-        console.error("Failed to save window metrics", e);
-      }
-    };
-
-    // Load and apply saved geometry
-    try {
-      const savedW = localStorage.getItem("solid_color_window_width");
-      const savedH = localStorage.getItem("solid_color_window_height");
-      const savedX = localStorage.getItem("solid_color_window_x");
-      const savedY = localStorage.getItem("solid_color_window_y");
-
-      if (savedW && savedH) {
-        const w = parseInt(savedW, 10);
-        const h = parseInt(savedH, 10);
-        window.resizeTo(w, h);
-        if (savedX !== null && savedY !== null) {
-          window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
-        }
-      } else {
-        // Default size: wider and taller to prevent panels from being cut off
-        const w = 1280;
-        const h = 880;
-        const left = Math.max(0, (window.screen.availWidth - w) / 2);
-        const top = Math.max(0, (window.screen.availHeight - h) / 2);
-        window.resizeTo(w, h);
-        window.moveTo(left, top);
-      }
-    } catch (e) {
-      console.error("Failed to load window metrics", e);
-    }
-
-    // Debounced listener to save metrics on resize
-    let debounceTimer: any;
-    const handleResize = () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(saveWindowMetrics, 200);
-    };
-
-    window.addEventListener("resize", handleResize);
-    
-    // Periodically save position since there is no standard move event
-    const positionInterval = setInterval(saveWindowMetrics, 1000);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearInterval(positionInterval);
-      clearTimeout(debounceTimer);
-    };
-  }, []);
-
   const handleParsedColor = (parsed: {
     r: number;
     g: number;
@@ -557,23 +562,96 @@ export default function App() {
   const contrastWhite = getContrastRatio(r, g, b, 255, 255, 255).toFixed(2);
   const contrastBlack = getContrastRatio(r, g, b, 15, 17, 21).toFixed(2); // Approximated dark bg
 
+  const handleCompactCopy = () => {
+    navigator.clipboard.writeText(hex);
+    setCompactCopied(true);
+    setTimeout(() => setCompactCopied(false), 2000);
+  };
+
+  if (isCompactMode) {
+    return (
+      <div 
+        className="min-h-screen bg-app-bg text-app-text-primary font-sans p-4 flex items-center justify-center transition-colors duration-300"
+      >
+        <div className="w-full max-w-[280px] bg-app-panel border border-app-border shadow-2xl flex flex-col items-center overflow-hidden">
+          {/* Header */}
+          <div className="w-full flex justify-between items-center py-2 px-3 border-b border-app-border bg-app-header">
+            <div className="flex items-center gap-1.5 text-app-accent opacity-80 text-[10px] font-mono tracking-widest uppercase">
+              <Pipette size={12} />
+              <span>EYE DROPPER</span>
+            </div>
+            <button 
+              onClick={() => setIsCompactMode(false)} 
+              className="text-app-text-muted hover:text-white transition-colors" 
+              title="Return to Full Mode"
+            >
+              <Maximize2 size={12} />
+            </button>
+          </div>
+
+          <div className="w-full p-4 flex flex-col gap-4">
+            <button
+              onClick={handleEyeDropper}
+              className={`group w-full flex flex-col items-center justify-center py-8 border border-dashed transition-all duration-700 ${
+                isEyeDropperActive 
+                  ? "bg-app-input border-app-accent animate-pulse" 
+                  : "bg-app-bg/30 border-app-text-muted/70 hover:border-app-accent/80 hover:bg-app-input"
+              }`}
+              style={pickedFlashColor ? { backgroundColor: pickedFlashColor, borderColor: pickedFlashColor, transitionDuration: '50ms' } : {}}
+              title="Pick color from screen"
+            >
+              <div className={`flex items-center gap-2 font-bold font-mono text-[14px] uppercase tracking-widest transition-colors ${
+                isEyeDropperActive ? "text-app-accent" : "text-app-text-primary group-hover:text-app-accent"
+              }`}>
+                <Pipette size={20} />
+                <span>{isEyeDropperActive ? "SEARCHING..." : "PICK SCREEN"}</span>
+              </div>
+              <div className={`text-[9px] font-mono tracking-[0.2em] uppercase mt-2 transition-colors ${
+                isEyeDropperActive ? "text-app-accent/70" : "text-app-text-muted/70"
+              }`}>
+                {isEyeDropperActive ? "SELECT COLOR ON SCREEN" : "CLICK TO PICK COLOR"}
+              </div>
+            </button>
+
+            <div className="flex items-center justify-between gap-3 bg-app-input border border-app-border p-2">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-sm shadow-inner border border-black/20" 
+                  style={{ backgroundColor: hex }}
+                />
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-app-text-muted font-mono mb-0.5 tracking-widest uppercase">HEX</span>
+                  <span className="font-mono text-sm tracking-widest text-app-text-primary">{hex}</span>
+                </div>
+              </div>
+              <button 
+                onClick={handleCompactCopy} 
+                className="w-8 h-8 flex items-center justify-center border border-app-border bg-app-bg/50 hover:border-app-accent hover:text-white transition-all text-app-text-muted shrink-0"
+                title="Copy HEX"
+              >
+                {compactCopied ? <Check size={14} className="text-app-accent" /> : <Copy size={14} />}
+              </button>
+            </div>
+            
+            <div className="flex justify-between items-center gap-2 border border-app-border bg-app-bg/30 px-2 py-1.5 focus-within:border-app-accent">
+              <span className="text-[9px] text-app-text-muted font-mono tracking-widest uppercase shrink-0">RGB</span>
+              <input
+                 type="text"
+                 readOnly
+                 value={`rgb(${r}, ${g}, ${b})`}
+                 className="bg-transparent font-mono text-[10px] text-app-text-primary text-right outline-none w-full"
+                 onFocus={(e) => { e.target.select(); document.execCommand('copy'); }}
+                 title="Click to copy"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-app-bg text-app-text-primary font-sans p-2 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden selection:bg-app-border-focus transition-colors duration-300">
-      <style>{`
-        @keyframes pulse-accent {
-          0%, 100% {
-            border-color: var(--theme-accent);
-            box-shadow: 0 0 2px var(--theme-accent);
-          }
-          50% {
-            border-color: var(--theme-accent);
-            box-shadow: 0 0 10px var(--theme-accent);
-          }
-        }
-        .animate-pulse-accent {
-          animation: pulse-accent 1.5s infinite ease-in-out;
-        }
-      `}</style>
       <div className="max-w-[1200px] mx-auto w-full flex flex-col gap-3">
         {/* Header - Software like */}
         <header className="flex flex-wrap gap-3 items-end justify-between border-b border-app-border pb-2 px-1 text-sm">
@@ -611,8 +689,15 @@ export default function App() {
               ENV: PRODUCTION
             </div>
             <div className="bg-app-panel border border-app-border px-3 py-1.5 text-app-text-primary font-mono text-[10px] tracking-widest shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] border-l-[1.5px] border-l-app-accent">
-              SYS. V5
+              SYS. V4
             </div>
+            <button
+              onClick={() => setIsCompactMode(true)}
+              className="bg-app-panel border border-app-border text-app-text-muted hover:text-white px-2.5 flex items-center justify-center focus:border-app-accent transition-colors"
+              title="Compact Mode"
+            >
+              <Minimize2 size={14} />
+            </button>
           </div>
         </header>
 
@@ -642,7 +727,7 @@ export default function App() {
                   onClick={handleEyeDropper}
                   className={`group w-full flex flex-col items-center justify-center py-4 border border-dashed transition-all duration-700 ${
                     isEyeDropperActive 
-                      ? "bg-app-input border-app-accent animate-pulse-accent" 
+                      ? "bg-app-input border-app-accent animate-pulse" 
                       : "bg-app-bg/30 border-app-text-muted/70 hover:border-app-accent/80 hover:bg-app-panel"
                   }`}
                   style={pickedFlashColor ? { backgroundColor: pickedFlashColor, borderColor: pickedFlashColor, transitionDuration: '50ms' } : {}}
