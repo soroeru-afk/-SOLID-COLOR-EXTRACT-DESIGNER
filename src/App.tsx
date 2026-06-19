@@ -355,7 +355,7 @@ export default function App() {
   useEffect(() => {
     if (isCompactMode) {
       try {
-        window.resizeTo(360, 350);
+        window.resizeTo(400, 400);
       } catch (e) {
         console.error("Failed to resize to compact size", e);
       }
