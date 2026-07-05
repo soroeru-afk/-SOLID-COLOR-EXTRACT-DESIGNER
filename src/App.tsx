@@ -331,71 +331,6 @@ export default function App() {
   const [isCompactMode, setIsCompactMode] = useState(false);
   const [compactCopied, setCompactCopied] = useState(false);
 
-  // Save window metrics (only when not in compact mode)
-  const saveWindowMetrics = () => {
-    if (isCompactMode) return;
-    try {
-      const width = window.outerWidth || window.innerWidth || document.documentElement.clientWidth;
-      const height = window.outerHeight || window.innerHeight || document.documentElement.clientHeight;
-      const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
-      const y = window.screenY !== undefined ? window.screenY : window.screenTop;
-
-      if (width > 350 && height > 350) {
-        localStorage.setItem("solid_color_window_width_full", String(width));
-        localStorage.setItem("solid_color_window_height_full", String(height));
-      }
-      localStorage.setItem("solid_color_window_x", String(x));
-      localStorage.setItem("solid_color_window_y", String(y));
-    } catch (e) {
-      console.error("Failed to save window metrics", e);
-    }
-  };
-
-  // Handle window resizing based on isCompactMode
-  useEffect(() => {
-    if (isCompactMode) {
-      try {
-        window.resizeTo(400, 400);
-      } catch (e) {
-        console.error("Failed to resize to compact size", e);
-      }
-    } else {
-      try {
-        const savedW = localStorage.getItem("solid_color_window_width_full");
-        const savedH = localStorage.getItem("solid_color_window_height_full");
-        const savedX = localStorage.getItem("solid_color_window_x");
-        const savedY = localStorage.getItem("solid_color_window_y");
-
-        const w = savedW ? parseInt(savedW, 10) : 1280;
-        const h = savedH ? parseInt(savedH, 10) : 880;
-        window.resizeTo(w, h);
-        if (savedX !== null && savedY !== null) {
-          window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
-        }
-      } catch (e) {
-        console.error("Failed to restore window metrics", e);
-      }
-    }
-  }, [isCompactMode]);
-
-  // Set up window resize listener to track full screen bounds
-  useEffect(() => {
-    let debounceTimer: any;
-    const handleResize = () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(saveWindowMetrics, 200);
-    };
-
-    window.addEventListener("resize", handleResize);
-    const positionInterval = setInterval(saveWindowMetrics, 1000);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearInterval(positionInterval);
-      clearTimeout(debounceTimer);
-    };
-  }, [isCompactMode]);
-
   const handleStockColor = () => {
     if (!stockColors.includes(hex)) {
       setStockColors((prev) =>
@@ -681,9 +616,9 @@ export default function App() {
               onChange={(e) => setTheme(e.target.value)}
               className="bg-app-panel border border-app-border px-2 py-1 text-app-text-muted font-mono text-[10px] tracking-widest shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] outline-none uppercase cursor-pointer hover:border-app-border-focus focus:border-app-accent transition-colors"
             >
-              <option value="navy">NAVY THEME</option>
-              <option value="midnight">MIDNIGHT</option>
-              <option value="light">LIGHT MODE</option>
+              <option value="navy">NAVY</option>
+              <option value="black">BLACK</option>
+              <option value="light">LIGHT</option>
             </select>
             <div className="bg-app-panel border border-app-border px-3 py-1.5 text-app-text-muted font-mono text-[10px] tracking-widest shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)]">
               ENV: PRODUCTION
