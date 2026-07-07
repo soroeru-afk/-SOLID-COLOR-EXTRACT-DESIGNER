@@ -380,8 +380,8 @@ export default function App() {
       const savedY = localStorage.getItem("solid_color_window_y");
 
       const w = savedW ? parseInt(savedW, 10) : 1280;
-      let h = savedH ? parseInt(savedH, 10) : 1200;
-      if (h === 880 || h === 1050 || h === 920) h = 1200; // Force update for old default
+      let h = savedH ? parseInt(savedH, 10) : 1150;
+      if (h === 880 || h === 1050 || h === 920 || h === 1200) h = 1150; // Force update for old default
       window.resizeTo(w, h);
       if (savedX !== null && savedY !== null) {
         window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
