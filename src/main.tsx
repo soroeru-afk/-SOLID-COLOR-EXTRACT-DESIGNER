@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 
 if (window.matchMedia('(display-mode: standalone)').matches) {
-  window.resizeTo(1440, 920);
+  window.resizeTo(1440, 1200);
 }
 
 createRoot(document.getElementById('root')!).render(
