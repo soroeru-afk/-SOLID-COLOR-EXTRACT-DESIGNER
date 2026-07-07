@@ -355,7 +355,7 @@ export default function App() {
     saveWindowMetrics(); // Save current size before entering compact mode
     setIsCompactMode(true);
     try {
-      window.resizeTo(400, 400);
+      window.resizeTo(400, 550);
     } catch (e) {
       console.error("Failed to resize to compact size", e);
     }
