@@ -331,21 +331,27 @@ export default function App() {
   const [isCompactMode, setIsCompactMode] = useState(false);
   const [compactCopied, setCompactCopied] = useState(false);
 
-  // Save window metrics (only when not in compact mode)
+  // Save window metrics
   const saveWindowMetrics = () => {
-    if (isCompactMode) return;
     try {
       const width = window.outerWidth || window.innerWidth || document.documentElement.clientWidth;
       const height = window.outerHeight || window.innerHeight || document.documentElement.clientHeight;
       const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
       const y = window.screenY !== undefined ? window.screenY : window.screenTop;
 
-      if (width > 350 && height > 350) {
-        localStorage.setItem("solid_color_window_width_full", String(width));
-        localStorage.setItem("solid_color_window_height_full", String(height));
+      if (isCompactMode) {
+        if (width > 300 && height > 300) {
+          localStorage.setItem("solid_color_window_width_compact", String(width));
+          localStorage.setItem("solid_color_window_height_compact", String(height));
+        }
+      } else {
+        if (width > 350 && height > 350) {
+          localStorage.setItem("solid_color_window_width_full", String(width));
+          localStorage.setItem("solid_color_window_height_full", String(height));
+        }
+        localStorage.setItem("solid_color_window_x", String(x));
+        localStorage.setItem("solid_color_window_y", String(y));
       }
-      localStorage.setItem("solid_color_window_x", String(x));
-      localStorage.setItem("solid_color_window_y", String(y));
     } catch (e) {
       console.error("Failed to save window metrics", e);
     }
@@ -355,7 +361,11 @@ export default function App() {
     saveWindowMetrics(); // Save current size before entering compact mode
     setIsCompactMode(true);
     try {
-      window.resizeTo(400, 550);
+      const savedW = localStorage.getItem("solid_color_window_width_compact");
+      const savedH = localStorage.getItem("solid_color_window_height_compact");
+      const w = savedW ? parseInt(savedW, 10) : 400;
+      const h = savedH ? parseInt(savedH, 10) : 550;
+      window.resizeTo(w, h);
     } catch (e) {
       console.error("Failed to resize to compact size", e);
     }
