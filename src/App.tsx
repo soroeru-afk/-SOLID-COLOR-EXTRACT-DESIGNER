@@ -331,6 +331,73 @@ export default function App() {
   const [isCompactMode, setIsCompactMode] = useState(false);
   const [compactCopied, setCompactCopied] = useState(false);
 
+  // Save window metrics (only when not in compact mode)
+  const saveWindowMetrics = () => {
+    if (isCompactMode) return;
+    try {
+      const width = window.outerWidth || window.innerWidth || document.documentElement.clientWidth;
+      const height = window.outerHeight || window.innerHeight || document.documentElement.clientHeight;
+      const x = window.screenX !== undefined ? window.screenX : window.screenLeft;
+      const y = window.screenY !== undefined ? window.screenY : window.screenTop;
+
+      if (width > 350 && height > 350) {
+        localStorage.setItem("solid_color_window_width_full", String(width));
+        localStorage.setItem("solid_color_window_height_full", String(height));
+      }
+      localStorage.setItem("solid_color_window_x", String(x));
+      localStorage.setItem("solid_color_window_y", String(y));
+    } catch (e) {
+      console.error("Failed to save window metrics", e);
+    }
+  };
+
+  const enterCompactMode = () => {
+    saveWindowMetrics(); // Save current size before entering compact mode
+    setIsCompactMode(true);
+    try {
+      window.resizeTo(400, 400);
+    } catch (e) {
+      console.error("Failed to resize to compact size", e);
+    }
+  };
+
+  const exitCompactMode = () => {
+    setIsCompactMode(false);
+    try {
+      const savedW = localStorage.getItem("solid_color_window_width_full");
+      const savedH = localStorage.getItem("solid_color_window_height_full");
+      const savedX = localStorage.getItem("solid_color_window_x");
+      const savedY = localStorage.getItem("solid_color_window_y");
+
+      const w = savedW ? parseInt(savedW, 10) : 1280;
+      const h = savedH ? parseInt(savedH, 10) : 880;
+      window.resizeTo(w, h);
+      if (savedX !== null && savedY !== null) {
+        window.moveTo(parseInt(savedX, 10), parseInt(savedY, 10));
+      }
+    } catch (e) {
+      console.error("Failed to restore window metrics", e);
+    }
+  };
+
+  // Set up window resize listener to track full screen bounds
+  useEffect(() => {
+    let debounceTimer: any;
+    const handleResize = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(saveWindowMetrics, 200);
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("move", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("move", handleResize);
+      clearTimeout(debounceTimer);
+    };
+  }, [isCompactMode]);
+
   const handleStockColor = () => {
     if (!stockColors.includes(hex)) {
       setStockColors((prev) =>
@@ -516,7 +583,7 @@ export default function App() {
               <span>EYE DROPPER</span>
             </div>
             <button 
-              onClick={() => setIsCompactMode(false)} 
+              onClick={exitCompactMode} 
               className="text-app-text-muted hover:text-white transition-colors" 
               title="Return to Full Mode"
             >
@@ -627,7 +694,7 @@ export default function App() {
               SYS. V4
             </div>
             <button
-              onClick={() => setIsCompactMode(true)}
+              onClick={enterCompactMode}
               className="bg-app-panel border border-app-border text-app-text-muted hover:text-white px-2.5 flex items-center justify-center focus:border-app-accent transition-colors"
               title="Compact Mode"
             >
