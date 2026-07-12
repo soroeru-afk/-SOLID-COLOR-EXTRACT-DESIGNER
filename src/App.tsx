@@ -15,6 +15,7 @@ import {
   Pipette,
   Maximize2,
   Minimize2,
+  X,
 } from "lucide-react";
 import {
   hsvToRgb,
@@ -899,10 +900,10 @@ export default function App() {
                             e.stopPropagation();
                             handleRemoveStock(e, i);
                           }}
-                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 animate-fade-in"
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-black hover:bg-neutral-800 text-white rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
                           title="Remove Color"
                         >
-                          ×
+                          <X size={9} strokeWidth={3} />
                         </button>
                       )}
                     </div>
