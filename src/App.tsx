@@ -323,7 +323,27 @@ export default function App() {
   const [previewFontFamily, setPreviewFontFamily] = useState("font-sans");
 
   // Stock colors state
-  const [stockColors, setStockColors] = useState<string[]>(Array(10).fill(""));
+  const [stockColors, setStockColors] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("solid_color_stock_colors");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter(c => typeof c === "string" && c !== "").slice(0, 5);
+          return filtered.concat(Array(5).fill("")).slice(0, 5);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load stock colors", e);
+    }
+    return Array(5).fill("");
+  });
+
+  // Save stock colors to localStorage
+  useEffect(() => {
+    localStorage.setItem("solid_color_stock_colors", JSON.stringify(stockColors));
+  }, [stockColors]);
+
   const [isEyeDropperActive, setIsEyeDropperActive] = useState(false);
   const [pickedFlashColor, setPickedFlashColor] = useState<string | null>(null);
   
@@ -413,9 +433,9 @@ export default function App() {
     if (!stockColors.includes(hex)) {
       setStockColors((prev) =>
         [hex, ...prev.filter((c) => c !== "")]
-          .slice(0, 10)
-          .concat(Array(10).fill(""))
-          .slice(0, 10),
+          .slice(0, 5)
+          .concat(Array(5).fill(""))
+          .slice(0, 5),
       );
     }
   };
@@ -433,13 +453,13 @@ export default function App() {
     }
   };
 
-  const handleRemoveStock = (e: React.MouseEvent, index: number) => {
+  const handleRemoveStock = (e: React.MouseEvent | React.TouchEvent, index: number) => {
     e.preventDefault();
     setStockColors((prev) => {
       const newStock = [...prev];
       newStock[index] = "";
       const filtered = newStock.filter((c) => c !== "");
-      return filtered.concat(Array(10).fill("")).slice(0, 10);
+      return filtered.concat(Array(5).fill("")).slice(0, 5);
     });
   };
 
@@ -862,14 +882,30 @@ export default function App() {
                   {stockColors.map((sc, i) => (
                     <div
                       key={i}
-                      onClick={() => sc && handleApplyStock(sc)}
-                      onContextMenu={(e) => sc && handleRemoveStock(e, i)}
-                      className={`w-full h-7 border ${sc ? "cursor-pointer border-black/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]" : "border-app-border border-dashed opacity-30"} transition-transform hover:scale-105`}
-                      style={{ backgroundColor: sc || "transparent" }}
-                      title={
-                        sc ? `${sc} (Right click to remove)` : "Empty Slot"
-                      }
-                    />
+                      className="relative group w-full h-7"
+                    >
+                      <div
+                        onClick={() => sc && handleApplyStock(sc)}
+                        onContextMenu={(e) => sc && handleRemoveStock(e, i)}
+                        className={`w-full h-full border ${sc ? "cursor-pointer border-black/20 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]" : "border-app-border border-dashed opacity-30"} transition-transform group-hover:scale-105`}
+                        style={{ backgroundColor: sc || "transparent" }}
+                        title={
+                          sc ? `${sc} (Right click or click X to remove)` : "Empty Slot"
+                        }
+                      />
+                      {sc && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveStock(e, i);
+                          }}
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 animate-fade-in"
+                          title="Remove Color"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
